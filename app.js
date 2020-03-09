@@ -77,6 +77,11 @@ app.get("/rating/join", (req, res) => {
 			}
 		}
 	});
+
+	res.status(200);
+	res.send("End");
+	res.end();
+
 });
 
 
