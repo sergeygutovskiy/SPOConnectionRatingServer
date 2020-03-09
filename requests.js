@@ -1,6 +1,11 @@
 var axios = require("axios");
 
-exports.loginRequest = function (name, password, callback) {
+exports.loginRequest = function (requestParams, callback) {
+	
+	var name = requestParams.name;
+	var password = requestParams.password;
+
+
 	const params = new URLSearchParams();
 	params.append("User[login]", name);
 	params.append("User[password]", password);
@@ -24,12 +29,22 @@ exports.loginRequest = function (name, password, callback) {
 		let student = splitCookie[splitCookie.length - 5].split(":")[1];
 		student = student.slice(1, student.length - 2);
 
-		callback(authCookie, student);
+		var results = {
+			cookie: authCookie,
+			student: student
+		}
+
+		callback(results);
 	})
 }
 
-exports.lessonsAndTeachersRequest = function (student, year, month, cookie, callback) {
+exports.lessonsAndTeachersRequest = function (params, callback) {
 	
+	var student = params.student;
+	var cookie = params.cookie;
+	var year = params.year;
+	var month = params.month;
+
 	const axiosConfig = {
 		maxRedirects: 0,
 		withCredentials: true,
@@ -47,15 +62,28 @@ exports.lessonsAndTeachersRequest = function (student, year, month, cookie, call
 	axios.get(address, axiosConfig)
 	.then((res) => {
 		let data = res.data;
-		// console.log(data);
-		callback(data.userlessons, data.Exercises, data.ExercisesVisits, data.lessonteachers);
+
+		var results = {
+			student: student,
+			cookie: cookie,
+			lessons: data.userlessons,
+			exercises: data.Exercises,
+			visits: data.ExercisesVisits, 
+			teachers: data.teachers
+		}
+
+		callback(results);
 	})
 	.catch((err) => {
 		console.log(err);
 	});
 }
 
-exports.exercisesByLessonRequest = function (student, lesson, cookie, callback) {
+exports.exercisesByLessonRequest = function (params, callback) {
+	var student = params.student;
+	var cookie = params.cookie;
+	var lesson = params.lesson;
+
 	const axiosConfig = {
 		maxRedirects: 0,
 		withCredentials: true,
@@ -66,14 +94,24 @@ exports.exercisesByLessonRequest = function (student, lesson, cookie, callback) 
 	};
 
 	let address = "https://ifspo.ifmo.ru/journal/getStudentExercisesByLesson" 
-		+ "?lesson=" + lesson
+		+ "?lesson=" + lesson.id
 		+ "&student=" + student
 
 	axios.get(address, axiosConfig)
 	.then((res) => {
 		let data = res.data;
-		// console.log(data);
-		callback(data.Exercises, data.todayExercisesVisits, data.teacher, data.all, data.was);
+
+		var results = {
+			lesson: lesson,
+			exercises: data.Exercises,
+			visits: data.todayExercisesVisits,
+			teacher: data.teacher,
+			was: data.was,
+			all: data.all
+			// perfomance: data.perfomance
+		}
+
+		callback(results);
 	})
 	.catch((err) => {
 		console.log(err);
