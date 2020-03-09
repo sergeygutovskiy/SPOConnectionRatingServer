@@ -41,9 +41,13 @@ app.get("/rating/join", (req, res) => {
 	connection.query(query, [name], function (error, results, fields) {
 		if (results.length == 0) {
 			
+			console.log(error);
+
 			var query = 'INSERT INTO `students` (name, password, real_name) VALUES (?, ?, ?)';
 			connection.query(query, [name, password, realName], function (error, results, fields) {
 				if (results != null) {
+
+					console.log(error);
 
 					res.status(200);
 					res.send({'id': results.insertId, 'join': 1, 'newPassword': 0});
@@ -57,7 +61,10 @@ app.get("/rating/join", (req, res) => {
 			if (password != results[0].password) {
 
 				var query = 'UPDATE students SET password = ? WHERE name = ?';
-				connection.query(query, [password, name], function () {
+				connection.query(query, [password, name], function (error) {
+					
+					console.log(error);
+
 					res.status(200);
 					res.send({'id': results[0].id, 'join': 0, 'newPassword': 1});
 					res.end();					
