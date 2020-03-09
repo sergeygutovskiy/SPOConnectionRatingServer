@@ -315,7 +315,7 @@ function onMakeRating() {
 }
 
 
-app.listen(443, () => {
+app.listen(8080, () => {
 	console.log("Server is running on 80!");
 
 	// makeRating();
