@@ -43,7 +43,7 @@ app.get("/rating/join", (req, res) => {
 			
 			console.log(error);
 
-			var query = 'INSERT INTO `students` (name, password, real_name) VALUES (?, ?, ?)';
+			var query = 'INSERT INTO `students` (name, password, full_name) VALUES (?, ?, ?)';
 			connection.query(query, [name, password, realName], function (error, results, fields) {
 				if (results != null) {
 
