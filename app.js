@@ -53,6 +53,9 @@ app.get("/rating/join", (req, res) => {
 					res.send({'id': results.insertId, 'join': 1, 'newPassword': 0});
 					res.end();
 				}
+				else {
+					console.log(error);
+				}
 			});			
 		} else {
 
@@ -77,11 +80,6 @@ app.get("/rating/join", (req, res) => {
 			}
 		}
 	});
-
-	res.status(200);
-	res.send("End");
-	res.end();
-
 });
 
 
