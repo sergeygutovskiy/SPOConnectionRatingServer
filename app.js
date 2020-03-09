@@ -7,8 +7,15 @@ const mysql   = require("mysql");
 var requests = require("./requests");
 
 const app = express();
-
 app.use(express.urlencoded({ extended: true }));
+
+
+const mysqlConfig = {
+	host: "us-cdbr-iron-east-04.cleardb.net",
+	user: "bfab93c67f2afe",
+	password: "435d995d",
+	db: "heroku_78b065a4fdc5343"
+}
 
 
 app.get("/rating/join", (req, res) => {
@@ -19,10 +26,10 @@ app.get("/rating/join", (req, res) => {
 	// console.log(realName);
 
 	var connection = mysql.createConnection({
-		host     : "localhost",
-		user     : "root",
-		password : "root",
-		database : "spoconnection"
+		host     : mysqlConfig.host,
+		user     : mysqlConfig.user,
+		password : mysqlConfig.password,
+		database : mysqlConfig.db
 	});	
 
 	var query = 'SELECT * FROM `students` WHERE `name`=?';
@@ -63,10 +70,10 @@ app.get("/rating/join", (req, res) => {
 
 app.get("/rating/get", (req, res) => {
 	var connection = mysql.createConnection({
-		host     : "localhost",
-		user     : "root",
-		password : "root",
-		database : "spoconnection"
+		host     : mysqlConfig.host,
+		user     : mysqlConfig.user,
+		password : mysqlConfig.password,
+		database : mysqlConfig.db
 	});	
 
 	var query = 'SELECT * FROM `students`';
@@ -91,10 +98,10 @@ var studentsInfo = [];
 
 function makeRating() {
 	var connection = mysql.createConnection({
-		host     : "localhost",
-		user     : "root",
-		password : "root",
-		database : "spoconnection"
+		host     : mysqlConfig.host,
+		user     : mysqlConfig.user,
+		password : mysqlConfig.password,
+		database : mysqlConfig.db
 	});	
 
 	var query = 'SELECT * FROM `students`';
@@ -282,10 +289,10 @@ function onMakeRating() {
 	});
 
 	var connection = mysql.createConnection({
-		host     : "localhost",
-		user     : "root",
-		password : "root",
-		database : "spoconnection"
+		host     : mysqlConfig.host,
+		user     : mysqlConfig.user,
+		password : mysqlConfig.password,
+		database : mysqlConfig.db
 	});	
 
 	for (var i = 0; i < ratingWeights.length; i++) 
