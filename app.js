@@ -18,6 +18,11 @@ const mysqlConfig = {
 }
 
 
+app.get("/", (req, res) => {
+	res.send("Hello");
+	res.end();
+});
+
 app.get("/rating/join", (req, res) => {
 	var name = req.query.name;
 	var password = req.query.password;
