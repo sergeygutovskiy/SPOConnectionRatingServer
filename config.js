@@ -1,4 +1,4 @@
-exports.mysqlConfig = {
+exports.mysql = {
 	host: "us-cdbr-iron-east-04.cleardb.net",
 	user: "bfab93c67f2afe",
 	password: "435d995d",
