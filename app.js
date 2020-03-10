@@ -4,18 +4,21 @@ const mysql   = require("mysql");
 // const fs = require("fs");
 // const FormData = require("form-data");
 
-var requests = require("./requests");
+var requests 	= require("./requests");
+const config = require("./config");
+
+const mysqlConfig = config.mysql;
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 
 
-const mysqlConfig = {
-	host: "us-cdbr-iron-east-04.cleardb.net",
-	user: "bfab93c67f2afe",
-	password: "435d995d",
-	db: "heroku_78b065a4fdc5343"
-}
+// const mysqlConfig = {
+// 	host: "us-cdbr-iron-east-04.cleardb.net",
+// 	user: "bfab93c67f2afe",
+// 	password: "435d995d",
+// 	db: "heroku_78b065a4fdc5343"
+// }
 
 
 app.get("/", (req, res) => {
@@ -23,10 +26,18 @@ app.get("/", (req, res) => {
 	res.end();
 });
 
-app.get("/rating/join", (req, res) => {
+app.get("/rating/update", (req, res) => {
+	res.send("Rating updating started...");
+	makeRating();
+	res.end();
+});
+
+app.get("/rating", (req, res) => {
+
 	var name = req.query.name;
 	var password = req.query.password;
-	var realName = req.query.realname;
+	var fio = req.query.fio;	
+	var group = req.query.group;
 
 	// console.log(realName);
 
@@ -37,67 +48,74 @@ app.get("/rating/join", (req, res) => {
 		database : mysqlConfig.db
 	});	
 
-	var query = 'SELECT * FROM `students` WHERE `name`=?';
-	connection.query(query, [name], function (error, results, fields) {
-		if (results.length == 0) {
-			
+	var query = 'SELECT (id) FROM students';
+	connection.query(query, (error, studentsIds) => {
+
 			console.log(error);
 
-			var query = 'INSERT INTO `students` (name, password, full_name) VALUES (?, ?, ?)';
-			connection.query(query, [name, password, realName], function (error, results, fields) {
-				if (results != null) {
+		var studentsCount = studentsIds.length;
 
-					console.log(error);
+		query = 'SELECT * FROM students WHERE name=?';
+		connection.query(query, [name], (error, student) => {
+			
+			if (student.length == 0) {	
+				query = 'INSERT INTO students (name, password, fio, group_name) VALUES (?, ?, ?, ?)';
+				connection.query(query, [name, password, fio, group], (error) => {
+					
+					if (error == null) {
+						res.status(200);
+						res.send({
+							studentPosition: "N",
+							studentsCount: studentsCount + 1
+						});
+						res.end();
+					} else { console.log(error); }
+				});			
+			} 
+			else 
+			{
+				if (password != student[0].password) {
+
+					query = 'UPDATE students SET password = ? WHERE name = ?';
+					connection.query(query, [password, name], (error) => {
+						
+						res.status(200);
+						res.send({
+							studentPosition: student[0].rating,
+							studentsCount: studentsCount
+						});
+						res.end();					
+					});	
+				} else {
 
 					res.status(200);
-					res.send({'id': results.insertId, 'join': 1, 'newPassword': 0});
+					res.send({
+						studentPosition: student[0].rating,
+						studentsCount: studentsCount
+					});					
 					res.end();
 				}
-				else {
-					console.log(error);
-				}
-			});			
-		} else {
-
-			// console.log(results[0].id);
-
-			if (password != results[0].password) {
-
-				var query = 'UPDATE students SET password = ? WHERE name = ?';
-				connection.query(query, [password, name], function (error) {
-					
-					console.log(error);
-
-					res.status(200);
-					res.send({'id': results[0].id, 'join': 0, 'newPassword': 1});
-					res.end();					
-				});	
-			} else {
-
-				res.status(200);
-				res.send({'id': results[0].id, 'join': 0, 'newPassword': 0});
-				res.end();
 			}
-		}
+		});
 	});
 });
 
 
-app.get("/rating/get", (req, res) => {
-	var connection = mysql.createConnection({
-		host     : mysqlConfig.host,
-		user     : mysqlConfig.user,
-		password : mysqlConfig.password,
-		database : mysqlConfig.db
-	});	
+// app.get("/rating/get", (req, res) => {
+// 	var connection = mysql.createConnection({
+// 		host     : mysqlConfig.host,
+// 		user     : mysqlConfig.user,
+// 		password : mysqlConfig.password,
+// 		database : mysqlConfig.db
+// 	});	
 
-	var query = 'SELECT * FROM `students`';
-	connection.query(query, (error, results) => {
-		res.status(200);
-		res.send(results);
-		res.end();
-	});
-});
+// 	var query = 'SELECT * FROM `students`';
+// 	connection.query(query, (error, results) => {
+// 		res.status(200);
+// 		res.send(results);
+// 		res.end();
+// 	});
+// });
 
 var currentStudentIndex = 0;
 var currentLessonIndex = 0;
