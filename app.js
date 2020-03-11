@@ -63,6 +63,9 @@ app.get("/rating", (req, res) => {
 				connection.query(query, [name, password, fio, group], (error) => {
 					
 					if (error == null) {
+
+						connection.end();
+
 						res.status(200);
 						res.send({
 							studentPosition: "N",
@@ -79,6 +82,8 @@ app.get("/rating", (req, res) => {
 					query = 'UPDATE students SET password = ? WHERE name = ?';
 					connection.query(query, [password, name], (error) => {
 						
+						connection.end();
+
 						res.status(200);
 						res.send({
 							studentPosition: student[0].rating,
@@ -87,6 +92,8 @@ app.get("/rating", (req, res) => {
 						res.end();					
 					});	
 				} else {
+
+					connection.end();
 
 					res.status(200);
 					res.send({
