@@ -161,6 +161,8 @@ function makeRating() {
 			password: students[currentStudentIndex].password
 		} 
 
+		connection.end()
+		
 		requests.loginRequest(params, onLoginRequest);
 	});
 }
@@ -341,7 +343,8 @@ function onMakeRating() {
 
 		query = 'UPDATE students SET rating=? WHERE name=?';
 		connection.query(query, [i + 1, student.name], (error, results) => {
-			console.log(error);
+			if (i = ratingWeights - 1)
+				connection.end();
 		});
 	}
 
