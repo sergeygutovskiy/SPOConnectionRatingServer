@@ -64,8 +64,8 @@ exports.lessonsAndTeachersRequest = function (params, callback) {
 		let data = res.data;
 
 		var results = {
-			student: student,
-			cookie: cookie,
+			// student: student,
+			// cookie: cookie,
 			lessons: data.userlessons,
 			exercises: data.Exercises,
 			visits: data.ExercisesVisits, 
