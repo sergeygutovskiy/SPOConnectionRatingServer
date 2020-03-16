@@ -72,6 +72,9 @@ function getStundetsInfo(students, index, end) {
 						if (i == ratingWeights.length - 1) {
 							console.log("Rating updated");
 
+							ratingWeights = [];
+							params = null;
+
 							connection.end()
 							console.log("Close connection");
 						}
@@ -262,12 +265,12 @@ app.listen(port, () => {
 		console.log(1);
 
 		var temp = (new Date()).getTime() - startTime;
-		if (temp > 1000 * 60 * 60 * 24) {
+		if (temp > 1000 * 60 * 30) {
 			updateRating();
 			startTime = (new Date()).getTime();
 		}
 
-	}, 1000 * 60 * 30);
+	}, 1000 * 60);
 
 	// updateRating();
 });
