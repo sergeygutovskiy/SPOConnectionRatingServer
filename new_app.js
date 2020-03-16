@@ -37,6 +37,140 @@ function updateRatingWeights(student, results) {
 	ratingWeights.push({ name: student.name, midMark: totalMark, midVisitsPercentage: totalVisits });
 }
 
+app.get("/rating", (req, res) => {
+
+	var name = req.query.name;
+	var password = req.query.password;
+	var fio = req.query.fio;	
+	var group = req.query.group;
+
+	// console.log(realName);
+
+	connection = mysql.createConnection({
+		host     : mysqlConfig.host,
+		user     : mysqlConfig.user,
+		password : mysqlConfig.password,
+		database : mysqlConfig.db
+	});	
+
+	var query = 'SELECT (id) FROM students';
+	connection.query(query, (error, studentsIds) => {
+		if (error != null) throw error;
+
+		var studentsCount = studentsIds.length;
+
+		query = 'SELECT * FROM students WHERE name=?';
+		connection.query(query, [name], (error, student) => {
+			
+			if (student.length == 0) {	
+				query = 'INSERT INTO students (name, password, fio, group_name) VALUES (?, ?, ?, ?)';
+				connection.query(query, [name, password, fio, group], (error) => {
+					if (error != null) throw error;
+
+					res.status(200);
+					res.send({
+						studentPosition: 0,
+						studentsCount: studentsCount + 1
+					});
+					res.end();
+					
+				});			
+			} 
+			else 
+			{
+				if (password != student[0].password) {
+					query = 'UPDATE students SET password = ? WHERE name = ?';
+					connection.query(query, [password, name], (error) => {
+						if (error != null) throw error;
+
+						res.status(200);
+						res.send({
+							studentPosition: student[0].rating,
+							studentsCount: studentsCount
+						});
+						res.end();					
+					
+					});	
+				}
+				else if (group != student[0].group_name) {
+					query = 'UPDATE students SET group_name = ? WHERE name = ?';
+					connection.query(query, [group, name], (error) => {
+						if (error != null) throw error;
+
+						res.status(200);
+						res.send({
+							studentPosition: student[0].rating,
+							studentsCount: studentsCount
+						});
+						res.end();					
+					
+					});						
+				}
+				else {
+					res.status(200);
+					res.send({
+						studentPosition: student[0].rating,
+						studentsCount: studentsCount
+					});
+					res.end();	
+				}
+			}
+
+			connection.end();
+		});
+	});
+});
+
+app.get("/rating/info", (req, res) => {
+	
+	connection = mysql.createConnection({
+		host     : mysqlConfig.host,
+		user     : mysqlConfig.user,
+		password : mysqlConfig.password,
+		database : mysqlConfig.db
+	});	
+
+	var query = 'SELECT fio, group_name, rating FROM students';
+	connection.query(query, (error, students) => {
+		if (error != null) throw error;
+
+		// res.status(200);
+
+		var string = '<table cellpadding="6">';
+
+		if (req.query.sort != null) {
+
+			students.sort((a, b) => {
+				var keyA = a.rating,
+				keyB = b.rating;
+				
+				if (req.query.sort == "up") {	
+					if(keyA < keyB) return 1;
+					if(keyA > keyB) return -1;
+				}
+				else if (req.query.sort == "down") {
+					if(keyA < keyB) return -1;
+					if(keyA > keyB) return 1;
+				}
+				return 0;
+			});
+		
+		}
+
+		students.forEach((student) => {
+			string += "<tr>";
+			string += ("<td>" + student.fio + "</td><td>" + student.group_name + "</td><td>" + student.rating + "</td>");
+			string += "</tr>";
+			if (student.fio == students[students.length - 1].fio) {
+				res.send(string + "</table>");
+				res.end();
+			}
+		});
+	});
+
+	connection.end();
+});
+
 function getStundetsInfo(students, index, end) {
 	
 	var temp = students.slice(index, index + 3);
@@ -262,7 +396,7 @@ app.listen(port, () => {
 	startTime = (new Date()).getTime();
 	timer = setInterval(() => {
 
-		console.log(1);
+		// console.log(1);
 
 		var temp = (new Date()).getTime() - startTime;
 		if (temp > 1000 * 60 * 30) {
