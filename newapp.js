@@ -37,7 +37,7 @@ app.get("/api", (req, res) => {
 
 })
 
-app.listen(process.env.PORT || 3030).then(() => {
+app.listen(process.env.PORT || 3000).then(() => {
 	console.log("Server is running...");
 });
 
