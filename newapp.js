@@ -37,20 +37,20 @@ app.get("/api", (req, res) => {
 
 })
 
-app.listen(3030).then(() => {
+app.listen(process.env.PORT || 3030).then(() => {
 	console.log("Server is running...");
 });
 
 const DBConfig = {
- 	//host: "us-cdbr-iron-east-04.cleardb.net",
- 	//user: "bfab93c67f2afe",
- 	//password: "435d995d",
- 	//database: "heroku_78b065a4fdc5343"
+ 	host: "us-cdbr-iron-east-04.cleardb.net",
+ 	user: "bfab93c67f2afe",
+ 	password: "435d995d",
+ 	database: "heroku_78b065a4fdc5343"
 	
-	host: "127.0.0.1",
-	user: "root",
-	password: "root",
-	database: "fspoapp_server"
+	// host: "127.0.0.1",
+	// user: "root",
+	// password: "root",
+	// database: "fspoapp_server"
 }
 
 
