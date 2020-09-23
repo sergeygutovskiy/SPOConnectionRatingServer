@@ -1,4 +1,4 @@
-const fastify  = require("fastify");
+const fastify  = require("fastify", { logger: true });
 const axios    = require("axios");
 const mysql    = require("mysql");
 const util     = require('util');
@@ -37,7 +37,7 @@ app.get("/api", (req, res) => {
 
 })
 
-app.listen(process.env.PORT, '0.0.0.0').then(() => {
+app.listen(3000 || process.env.PORT, '0.0.0.0').then(() => {
 	console.log("Server is running...");
 });
 
@@ -126,24 +126,25 @@ async function updateRating()
 		for (lesson of lessons)
 		{
 			response = await requests.getExercisesByLesson(studentID, lesson.id, authCookie);
+			// console.log(lesson.name + ": " + response.was / response.all);
 			let visits = response.visits;
 
 			let marksSum = marksCount = 0;
 			for (key in visits)
 			{
 				let visit = visits[key][0];
+				
 				if (visit.point == null) continue;
 				
 				marksSum += Number(visit.point);
 				marksCount++;
+
 			}
 
 			let midMark = (marksCount == 0)? 0 : marksSum / marksCount;
 		
-			console.log(studentID);
-
-			queryString = "INSERT INTO students_info (student_id, lesson_id, mid_mark, round) VALUES(?, ?, ?, ?)";
-			await query(queryString, [ studentID, lesson.id, midMark, round ]);
+			queryString = "INSERT INTO students_info (student_id, lesson_id, mid_mark, mid_visits, round) VALUES(?, ?, ?, ?, ?)";
+			await query(queryString, [ studentID, lesson.id, midMark, response.was / response.all , round ]);
 		}
 	}
 
@@ -154,17 +155,26 @@ async function updateRating()
 	{
 		queryString = "SELECT SUM(mid_mark) FROM students_info WHERE round = ? AND student_id = ?";
 		response = await query(queryString, [ round, student.student_id ]);
-		response = response[0]["SUM(mid_mark)"];
+		let sum_marks = response[0]["SUM(mid_mark)"];
+	
+		queryString = "SELECT SUM(mid_visits) FROM students_info WHERE round = ? AND student_id = ?";
+		response = await query(queryString, [ round, student.student_id ]);
+		let sum_visits = response[0]["SUM(mid_visits)"];
+	
+		console.log(sum_marks, sum_visits);
 
 		averageMarks.push({
 			studentID: student.student_id,
-			averangeMark: response
+			averangeMark: sum_marks,
+			averangeVisit: sum_visits
 		});
 	}
 	
 	// sort students by their average marks
 	averageMarks.sort((a, b) => {
-		return a.averageMark - b.averageMark;
+		if      ((a.averangeMark - b.averangeMark) < 0) return 1;
+		else if ((a.averangeMark - b.averangeMark) > 0) return 0;
+		else    										return b.averangeVisit - a.averangeVisit;
 	});
 
 	// update rating in DB
@@ -173,6 +183,8 @@ async function updateRating()
 		queryString = "UPDATE students SET rating_place = ? WHERE student_id = ?";
 		await query(queryString, [ Number(position) + 1, averageMarks[position].studentID ]);
 	}
+	
+	connection.end();	
 
 	return 0;
 }
