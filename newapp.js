@@ -1,10 +1,22 @@
 const fastify  = require("fastify", { logger: true });
 const axios    = require("axios");
 const mysql    = require("mysql");
-const util     = require('util');
-
+const util     = require("util");
+const fs       = require("fs");
 const requests = require("./newrequests.js"); 
+const path     = require('path')
+const app      = fastify();
 
+app.register(require('fastify-static'), {
+	root: path.join(__dirname, ''),
+	prefix: '/'
+})
+
+app.register(require("point-of-view"), {
+		engine: {
+		mustache: require("mustache")
+	}
+})
 
 /* TO DO
  *
@@ -16,8 +28,17 @@ const requests = require("./newrequests.js");
  *
  */
 
-
-const app = fastify();
+const DBConfig = {
+ 	host: "us-cdbr-iron-east-04.cleardb.net",
+ 	user: "bfab93c67f2afe",
+ 	password: "435d995d",
+ 	database: "heroku_78b065a4fdc5343"
+	
+	// host: "127.0.0.1",
+	// user: "root",
+	// password: "root",
+	// database: "fspoapp_server"
+}
 
 app.get("/api", (req, res) => {
 	if (req.query.method == "rating.student")
@@ -35,23 +56,25 @@ app.get("/api", (req, res) => {
 		return 0;
 	}
 
-})
+});
+
+app.get("/", (req, res) => {
+	( async () => {
+
+		let connection = mysql.createConnection(DBConfig);
+		let query = util.promisify(connection.query).bind(connection);
+		let students = await query("SELECT * FROM students");
+
+		res.view('/students.html', { students: students })
+		
+		connection.end();
+
+	})();
+});
 
 app.listen(process.env.PORT || 3000, '0.0.0.0').then(() => {
 	console.log("Server is running...");
 });
-
-const DBConfig = {
- 	host: "us-cdbr-iron-east-04.cleardb.net",
- 	user: "bfab93c67f2afe",
- 	password: "435d995d",
- 	database: "heroku_78b065a4fdc5343"
-	
-	// host: "127.0.0.1",
-	// user: "root",
-	// password: "root",
-	// database: "fspoapp_server"
-}
 
 
 async function checkRatingStudent(studentID, name, password, fio, party)
@@ -69,7 +92,7 @@ async function checkRatingStudent(studentID, name, password, fio, party)
 	// new student
 	if (student.length == 0)
 	{
-		queryString = "INSERT INTO students (student_id, name, password, fio, party) VALUES (?, ?, ?, ?, ?)";
+		queryString = "INSERT INTO students (student_id, name, password, fio, party, login_at) VALUES (?, ?, ?, ?, ?, now())";
 		await query(queryString, [ studentID, name, password, fio, party ]);
 	
 		connection.end();
@@ -85,7 +108,7 @@ async function checkRatingStudent(studentID, name, password, fio, party)
 			|| student[0].party != party
 		)
 		{
-			queryString = "UPDATE students SET name=?, password=?, fio=?, party=? WHERE student_id = ?";
+			queryString = "UPDATE students SET name=?, password=?, fio=?, party=?, login_at=now() WHERE student_id = ?";
 			await query(queryString, [ name, password, fio, party, studentID ]);		
 		}
 		
