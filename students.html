@@ -1,9 +1,42 @@
 <html>
+	<head>	
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<style>
+			
+			.student {
+				display: grid;
+				grid-template-columns: 1fr 1fr 1fr  2fr 2fr;
+				
+				margin-bottom: 32px;
+			}
+			
+			.student > div {
+				padding: 0 8px;
+			}
+			
+			@media screen and (max-width: 600px)
+			{
+				.student {
+					grid-template-columns: 1fr;
+					grid-template-rows: auto auto auto auto auto;
+				}	
+
+				.student > div {
+					padding: 2px 0px;
+				}
+			}
+
+		</style>
+	</head>
 	<body>
-		<h1>Hello</h1>
+		<h1> Students ({{ students_count }}) </h1>
 		{{ #students }}
-			<div>
-				<p> {{ student_id }}: {{ fio }} </p>
+			<div class="student">
+				<div> {{ student_id }}  </div> 
+				<div> {{ fio }}         </div>
+				<div> {{ party }}       </div>
+				<div> {{ created_at  }} </div>
+				<div> {{ login_at }}    </div>
 			</div>
 		{{ /students }}
 	</body>

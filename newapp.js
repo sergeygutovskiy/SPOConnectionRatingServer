@@ -64,8 +64,16 @@ app.get("/", (req, res) => {
 		let connection = mysql.createConnection(DBConfig);
 		let query = util.promisify(connection.query).bind(connection);
 		let students = await query("SELECT * FROM students");
+		
+		// for (student of students)
+		// {
+		//	console.log(String(student.login_at));
+		// }
 
-		res.view('/students.html', { students: students })
+		res.view('/students.html', { 
+			students:       students,
+			students_count: students.length
+		});
 		
 		connection.end();
 
@@ -95,6 +103,8 @@ async function checkRatingStudent(studentID, name, password, fio, party)
 		queryString = "INSERT INTO students (student_id, name, password, fio, party, login_at) VALUES (?, ?, ?, ?, ?, now())";
 		await query(queryString, [ studentID, name, password, fio, party ]);
 	
+		updateRating();
+
 		connection.end();
 		return { pos: -1, count: studentsCount + 1}; 
 	}
