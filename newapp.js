@@ -111,6 +111,11 @@ async function checkRatingStudent(studentID, name, password, fio, party)
 			queryString = "UPDATE students SET name=?, password=?, fio=?, party=?, login_at=NOW() WHERE student_id = ?";
 			await query(queryString, [ name, password, fio, party, studentID ]);		
 		}
+		else
+		{
+			queryString = "UPDATE students SET login_at=NOW() WHERE student_id = ?";
+            await query(queryString, [ studentID ])
+		}
 		
 		connection.end();
 		return { pos: student[0].rating_place, count: studentsCount };
