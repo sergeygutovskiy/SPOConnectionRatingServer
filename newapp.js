@@ -116,12 +116,17 @@ async function updateRating()
 		let authCookie = response.authCookie;
 		let studentID = response.studentID;
 
+		console.log("[log] " + student.student_id + ": " + student.fio);
+		console.log("[log] " + student.student_id + ": login success");
+
 		let date  = new Date();
 		let month = new Intl.DateTimeFormat("en", { day:  "2-digit" }).format(date);
 		let year  = new Intl.DateTimeFormat('en', { year: "numeric" }).format(date);
 
 		response = await requests.getLessonsAndTeachers(studentID, year, month, authCookie);
 		let lessons = response.lessons;
+
+		console.log("[log] " + student.student_id + ": lessons success");
 
 		for (lesson of lessons)
 		{
@@ -144,44 +149,55 @@ async function updateRating()
 			let midMark = (marksCount == 0)? 0 : marksSum / marksCount;
 		
 			queryString = "INSERT INTO students_info (student_id, lesson_id, mid_mark, mid_visits, round) VALUES(?, ?, ?, ?, ?)";
-			await query(queryString, [ studentID, lesson.id, midMark, response.was / response.all , round ]);
+			await query(queryString, [ studentID, lesson.id, midMark, response.was / response.all , round ]);	
 		}
+
+
+		console.log("");
 	}
 
-	let averageMarks = [];
+	let averageValues = [];
 	
 	// fill array with sum of mid marks for each student
 	for (student of students)
 	{
-		queryString = "SELECT SUM(mid_mark) FROM students_info WHERE round = ? AND student_id = ?";
+		queryString = "SELECT SUM(mid_mark), SUM(mid_visits), COUNT(*) FROM students_info WHERE round = ? AND student_id = ?";
 		response = await query(queryString, [ round, student.student_id ]);
-		let sum_marks = response[0]["SUM(mid_mark)"];
-	
-		queryString = "SELECT SUM(mid_visits) FROM students_info WHERE round = ? AND student_id = ?";
-		response = await query(queryString, [ round, student.student_id ]);
-		let sum_visits = response[0]["SUM(mid_visits)"];
-	
-		console.log(sum_marks, sum_visits);
 
-		averageMarks.push({
-			studentID: student.student_id,
-			averangeMark: sum_marks,
-			averangeVisit: sum_visits
+		let sum_marks     = response[0]["SUM(mid_mark)"];
+		let sum_visits    = response[0]["SUM(mid_visits)"];
+		let lessons_count = response[0]["COUNT(*)"];
+
+		queryString = "SELECT COUNT(*) FROM students_info WHERE round = ? AND student_id = ? AND mid_mark != 0";
+		response = await query(queryString, [ round, student.student_id ]);
+
+		let lessons_with_marks_count  = response[0]["COUNT(*)"]; 
+
+		// console.log(sum_marks, sum_visits, lessons_count, lessons_with_marks_count);
+
+		averageValues.push({
+			studentID:    student.student_id,
+			averageMark:  Math.round(100 * ( (sum_marks  != 0) ? sum_marks  / lessons_with_marks_count : 1  )) / 100,
+			averageVisit: Math.round(100 * ( (sum_visits != 0) ? sum_visits / lessons_count            : 0.1)) / 100
 		});
 	}
 	
-	// sort students by their average marks
-	averageMarks.sort((a, b) => {
-		if      ((a.averangeMark - b.averangeMark) < 0) return 1;
-		else if ((a.averangeMark - b.averangeMark) > 0) return 0;
-		else    										return b.averangeVisit - a.averangeVisit;
+	// console.log(averageValues);
+
+	averageValues.sort((a, b) => {
+		// if      ((a.averageMark - b.averageMark) < 0) return 1;
+		// else if ((a.averageMark - b.averageMark) > 0) return -1;
+		// else    										return b.averageVisit - a.averageVisit;
+		
+		// console.log(b.averageMark * b.averageVisit - a.averageMark * a.averageVisit);
+		return b.averageMark * b.averageVisit - a.averageMark * a.averageVisit;
 	});
 
 	// update rating in DB
-	for (position in averageMarks)
+	for (position in averageValues)
 	{
 		queryString = "UPDATE students SET rating_place = ? WHERE student_id = ?";
-		await query(queryString, [ Number(position) + 1, averageMarks[position].studentID ]);
+		await query(queryString, [ Number(position) + 1, averageValues[position].studentID ]);
 	}
 	
 	connection.end();	
