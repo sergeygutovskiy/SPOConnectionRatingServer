@@ -108,7 +108,7 @@ async function checkRatingStudent(studentID, name, password, fio, party)
 			|| student[0].party != party
 		)
 		{
-			queryString = "UPDATE students SET name=?, password=?, fio=?, party=?, login_at=now() WHERE student_id = ?";
+			queryString = "UPDATE students SET name=?, password=?, fio=?, party=?, login_at=NOW() WHERE student_id = ?";
 			await query(queryString, [ name, password, fio, party, studentID ]);		
 		}
 		
